@@ -9,7 +9,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --format table --output-file eslint-report.txt"
+    "lint": "eslint . --config eslint.config.js --format table --output-file eslint-report.txt"
   },
   "repository": {
     "type": "git",
