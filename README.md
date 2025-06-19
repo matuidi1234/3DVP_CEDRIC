@@ -33,3 +33,6 @@ Application web Node.js pour CloudNinja Corp
 - Morgan (logging)
 
 [![CI Status](https://github.com/matuidi1234/devops-ninja-app/workflows/CI%20Pipeline/badge.svg)](https://github.com/matuidi1234/3DVP_CEDRIC/actions)
+
+![ESLint](https://github.com/matuidi1234/3DVP_CEDRIC/workflows/Quality%20Check/badge.svg)
+![Vulnerabilities](https://img.shields.io/badge/vulnerabilities-none-brightgreen)

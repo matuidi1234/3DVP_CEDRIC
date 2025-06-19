@@ -1,0 +1,48 @@
+name: Quality Check (Quête 3)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run ESLint
+      run: npm run lint
+
+    - name: Run npm audit
+      run: |
+        npm audit --audit-level=moderate
+        if [ $? -ne 0 ]; then
+          echo "Vulnerabilities found! Check with 'npm audit'"
+          exit 1
+        fi
+
+    - name: Dependency Vulnerability Scan
+      uses: actions/dependency-review-action@v3
+
+    - name: Upload ESLint results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: eslint-results
+        path: |
+          eslint-report.txt
+        retention-days: 5
