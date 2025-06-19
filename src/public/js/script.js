@@ -1,12 +1,12 @@
+/* eslint-env browser */
 document.addEventListener('DOMContentLoaded', () => {
-  // Gestion de la navigation
   const loadContent = async (path) => {
     const contentDiv = document.getElementById('content');
     
     switch(path) {
-      case '/services':
-        const services = await fetch('/api/services').then(res => res.json());
-        contentDiv.innerHTML = `
+    case '/services': {
+      const services = await fetch('/api/services').then(res => res.json());
+      contentDiv.innerHTML = `
           <h2 class="mb-4">Nos Services</h2>
           <div class="row" id="services-container">
             ${services.map(service => `
@@ -20,13 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>
             `).join('')}
-          </div>
-        `;
-        break;
+          </div>`;
+      break;
+    }
 
-      case '/status':
-        const status = await fetch('/api/status').then(res => res.json());
-        contentDiv.innerHTML = `
+    case '/status': {
+      const status = await fetch('/api/status').then(res => res.json());
+      contentDiv.innerHTML = `
           <div class="card">
             <div class="card-header">
               <h2>Statut du Serveur</h2>
@@ -38,18 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <li class="list-group-item"><strong>Uptime:</strong> ${Math.floor(status.uptime / 60)} minutes</li>
               </ul>
             </div>
-          </div>
-        `;
-        break;
+          </div>`;
+      break;
+    }
 
-      default:
-        contentDiv.innerHTML = `
+    default: {
+      contentDiv.innerHTML = `
           <div class="text-center">
             <h1>Bienvenue chez CloudNinja Corp</h1>
             <p class="lead">Votre partenaire DevOps de confiance</p>
             <img src="https://via.placeholder.com/800x400?text=CloudNinja+Banner" class="img-fluid rounded my-4">
-          </div>
-        `;
+          </div>`;
+    }
     }
   };
 

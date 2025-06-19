@@ -1,6 +1,8 @@
+/* eslint-env jest */
 const request = require('supertest');
 const app = require('../src/app');
 const server = app.listen(3001);
+server.close();
 
 describe('API Endpoints', () => {
   test('GET /api/services should return services', async () => {

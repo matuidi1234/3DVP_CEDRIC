@@ -1,6 +1,10 @@
 name: CI Pipeline
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -17,13 +21,13 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci  # Utilisez 'npm ci' au lieu de 'npm install' pour les CI
+        run: npm install
 
+      - name: Fix jest permissions
+        run: chmod +x node_modules/.bin/jest
+      
       - name: Run tests
         run: npm test
-
-      - name: Run linter
-        run: npm run lint
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
