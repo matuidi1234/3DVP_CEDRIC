@@ -22,33 +22,17 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20'
-        cache: 'npm'
+    - run: npm ci
+    - run: npm run lint
 
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run ESLint
-      run: npm run lint
-
-    - name: Run npm audit
-      run: |
-        npm audit --audit-level=moderate || true
-        echo "npm audit exit code: $?"
-        # Le workflow échouera explicitement plus tard si nécessaire
-
-    - name: Dependency Vulnerability Scan
-      uses: actions/dependency-review-action@v3
-
-    - name: Upload ESLint results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: eslint-results
-        path: eslint-report.txt
-        retention-days: 5
-
-    - name: Fail if vulnerabilities found
-      if: steps.audit.outcome == 'failure'
-      run: |
-        echo "::error::Critical vulnerabilities found in dependencies!"
-        exit 1
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
