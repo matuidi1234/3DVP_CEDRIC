@@ -34,22 +34,39 @@ jobs:
 
       - name: Install Trivy
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          trivy --version
 
       - name: Scan image with Trivy
+        id: trivy-scan
         run: |
-          trivy image --security-checks vuln \
-            --format table \
+          trivy image \
+            --security-checks vuln \
+            --format sarif \
+            --output trivy-results.sarif \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
-            --exit-code 1 \
+            --exit-code 0 \  # Ne pas bloquer le workflow
             ghcr.io/matuidi1234/devops-ninja:latest
+          
+          # Vérifie manuellement les résultats
+          if grep -q '"level": "error"' trivy-results.sarif; then
+            echo "VULNERABILITIES_FOUND=true" >> $GITHUB_ENV
+          fi
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy-results.sarif
+
+      - name: Fail if critical vulnerabilities found
+        if: env.VULNERABILITIES_FOUND == 'true'
+        run: |
+          echo "::error::Critical vulnerabilities detected! Check Trivy report."
+          exit 1
 
       - name: Push Docker image
+        if: env.VULNERABILITIES_FOUND != 'true'
         run: |
           docker push ghcr.io/matuidi1234/devops-ninja:latest
