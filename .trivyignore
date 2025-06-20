@@ -1,0 +1,3 @@
+# Exemple de .trivyignore
+CVE-2023-12345  # ID de la vulnérabilité à ignorer
+CVE-2023-67890
