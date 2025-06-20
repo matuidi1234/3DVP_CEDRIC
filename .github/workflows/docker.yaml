@@ -27,19 +27,6 @@ jobs:
           docker build -t devops-ninja .
           echo "IMAGE_ID=devops-ninja" >> $GITHUB_ENV
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Tag and Push Docker image
-        id: tag-push
-        run: |
-          docker tag ${{ env.IMAGE_ID }} ghcr.io/matuidi1234/devops-ninja:latest
-          docker push ghcr.io/matuidi1234/devops-ninja:latest
-
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
@@ -48,27 +35,39 @@ jobs:
       - name: Scan image with Trivy
         id: trivy-scan
         run: |
+          # Analyse et génération du rapport
           trivy image \
             --security-checks vuln \
             --format sarif \
             --output trivy-results.sarif \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
-            --exit-code 0 \
-            ${{ env.IMAGE_ID }}  # Utilise l'ID local de l'image
-
+            ${{ env.IMAGE_ID }}
+          
+          # Vérification des vulnérabilités critiques
           if grep -q '"level": "error"' trivy-results.sarif; then
             echo "VULNERABILITIES_FOUND=true" >> $GITHUB_ENV
+            echo "::error::Critical vulnerabilities detected - blocking image push"
+            exit 1  # Bloque immédiatement le workflow
           fi
 
       - name: Upload Trivy report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-results
           path: trivy-results.sarif
 
-      - name: Fail if critical vulnerabilities found
-        if: env.VULNERABILITIES_FOUND == 'true'
+      - name: Login to GitHub Container Registry
+        if: env.VULNERABILITIES_FOUND != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker image
+        if: env.VULNERABILITIES_FOUND != 'true'
         run: |
-          echo "::error::Critical vulnerabilities detected! Check Trivy report."
-          exit 1
+          docker tag ${{ env.IMAGE_ID }} ghcr.io/matuidi1234/devops-ninja:latest
+          docker push ghcr.io/matuidi1234/devops-ninja:latest
