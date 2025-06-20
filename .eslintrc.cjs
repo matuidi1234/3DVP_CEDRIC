@@ -1,33 +1,47 @@
-module.exports = {
-  env: {
-    node: true,
-    es2021: true,
+const { configs: jsConfigs } = require("@eslint/js");
+const globals = require("globals");
+
+module.exports = [
+  jsConfigs.recommended,
+  {
+    files: ["src/**/*.js"],
+    ignores: ["**/node_modules/**"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-console": "off"
+    }
   },
-  extends: [
-    'eslint:recommended',
-    'airbnb-base',
-  ],
-  parserOptions: {
-    ecmaVersion: 12,
-    sourceType: 'module',
+  {
+    files: ["src/public/js/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.browser
+      }
+    },
+    rules: {
+      "no-console": "warn"
+    }
   },
-  rules: {
-    'no-console': 'off',
-    'indent': ['error', 2],
-    'quotes': ['error', 'double'],
-    'linebreak-style': ['error', 'windows'], // ou "off" si tu préfères
-    'import/newline-after-import': ['error', { 'count': 1 }],
-  },
-  overrides: [
-    {
-      files: ['tests/**/*.js'],
-      env: {
-        jest: true,
-      },
-      rules: {
-        // désactive par exemple cette règle sur les tests si tu veux
-        'no-undef': 'off',
+  {
+    files: ["test/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node
       }
     }
-  ]
-};
+  },
+  {
+    rules: {
+      "indent": ["error", 2],
+      "linebreak-style": ["error", "unix"],
+      "quotes": ["error", "single"],
+      "semi": ["error", "always"],
+      "eqeqeq": "error"
+    }
+  }
+];
