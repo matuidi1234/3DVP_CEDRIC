@@ -36,3 +36,16 @@ Application web Node.js pour CloudNinja Corp
 
 ![ESLint](https://github.com/matuidi1234/3DVP_CEDRIC/workflows/Quality%20Check/badge.svg)
 ![Vulnerabilities](https://img.shields.io/badge/vulnerabilities-none-brightgreen)
+
+## Qualité du Code
+
+- ESLint pour le linting
+- Tests unitaires et d'intégration avec Jest
+- Analyse de sécurité avec `npm audit`
+- Intégration continue avec GitHub Actions
+
+## Déploiement avec Docker
+
+### Construction de l'image
+```bash
+docker build -t devops-ninja .

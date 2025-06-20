@@ -4,13 +4,14 @@ const services = [
   { id: 3, name: 'Kubernetes Training', description: 'Comprehensive Kubernetes training', price: 199.99 }
 ];
 
-exports.getAllServices = (req, res) => {
-  res.json(services);
-};
-
-exports.getServiceById = (req, res) => {
-  const id = parseInt(req.params.id);
-  const service = services.find(s => s.id === id);
-  if (!service) return res.status(404).json({ error: 'Service not found' });
-  res.json(service);
+module.exports = {
+  getServices: (req, res) => {
+    res.json(services);
+  },
+  getServiceById: (req, res) => {
+    const id = parseInt(req.params.id);
+    const service = services.find(s => s.id === id);
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    res.json(service);
+  }
 };

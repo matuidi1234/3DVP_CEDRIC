@@ -1,4 +1,4 @@
-const { getAllServices } = require('../src/controllers/servicesController');
+const { getServices } = require('../src/controllers/servicesController');
 
 describe('Services Controller', () => {
   test('should return all services', () => {
@@ -8,7 +8,7 @@ describe('Services Controller', () => {
       status: jest.fn().mockReturnThis()
     };
 
-    getAllServices(req, res);
+    getServices(req, res);
     expect(res.json).toHaveBeenCalled();
   });
 });

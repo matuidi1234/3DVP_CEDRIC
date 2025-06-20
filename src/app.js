@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
@@ -6,7 +8,7 @@ const statusRouter = require('./routes/status');
 const logger = require('./middleware/logger');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(morgan('dev'));
@@ -16,8 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/api/services', apiRouter);
-app.use('/api/status', statusRouter);
+app.use('/api/services', require('./routes/api'));
+app.use('/api/status', require('./routes/status'));
 
 // Route racine
 app.get('/', (req, res) => {
@@ -39,8 +41,7 @@ app.use((req, res) => {
 });
 
 // Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 module.exports = app;
