@@ -2,9 +2,9 @@ name: Docker CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-publish:
@@ -27,45 +27,53 @@ jobs:
           docker build -t devops-ninja .
           echo "IMAGE_ID=devops-ninja" >> $GITHUB_ENV
 
-      - name: Install Trivy with cache
+      - name: Setup Trivy
         run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          # Installation de Trivy avec cache persistant
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
+            sh -s -- -b /usr/local/bin v0.50.1  # Version spécifique stable
           mkdir -p ~/.cache/trivy
           trivy --cache-dir ~/.cache/trivy --version
 
-      - name: Scan image with Trivy
-        id: trivy-scan
+      - name: Download Trivy DB
         run: |
-          # Mise à jour de la DB avec cache
-          trivy --cache-dir ~/.cache/trivy image --download-db-only
-          
-          # Analyse avec les scanners actuels
+          trivy --cache-dir ~/.cache/trivy image --download-db-only --skip-java-db-update
+
+      - name: Scan image for vulnerabilities
+        id: trivy-scan
+        continue-on-error: true  # Permet de continuer malgré les vulnérabilités
+        run: |
+          # Analyse avec sortie détaillée
           trivy --cache-dir ~/.cache/trivy image \
             --scanners vuln \
-            --format sarif \
+            --format template \
+            --template "@contrib/sarif.tpl" \
             --output trivy-results.sarif \
-            --severity CRITICAL,HIGH \
+            --severity HIGH,CRITICAL \
             --ignore-unfixed \
             ${{ env.IMAGE_ID }}
-          
-          # Analyse des résultats
+
+          # Analyse conditionnelle des résultats
           if [ -s trivy-results.sarif ]; then
             echo "VULNERABILITIES_FOUND=true" >> $GITHUB_ENV
-            echo "::error::Critical vulnerabilities detected - see report"
-            cat trivy-results.sarif | jq '.runs[0].results[] | select(.level == "error") | .message'
-            exit 1
+            echo "::warning::Vulnerabilities detected - see report"
           fi
 
       - name: Upload Trivy report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-results
           path: trivy-results.sarif
 
-      - name: Login and Push
+      - name: Push Docker image
         if: env.VULNERABILITIES_FOUND != 'true'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker tag ${{ env.IMAGE_ID }} ghcr.io/matuidi1234/devops-ninja:latest
           docker push ghcr.io/matuidi1234/devops-ninja:latest
+
+      - name: Fail workflow if critical vulnerabilities
+        if: env.VULNERABILITIES_FOUND == 'true'
+        run: |
+          echo "::error::Critical vulnerabilities detected - blocking image push"
+          exit 1
